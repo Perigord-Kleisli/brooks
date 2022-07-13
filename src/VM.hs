@@ -1,23 +1,34 @@
 module VM where
 
+import qualified Data.Map.Strict as M
+import Control.Monad.State
+
+import Compiler
 import Parser
-import qualified  Data.Map.Strict as M
-import qualified  Control.Monad.State as T
+import Data.Maybe
+import Data.Function
 
-type TopLvlFunc a = (a -> a) -> a -> a
-type Error = [String]
+data Val = Num Int | Func String Lambda
+  deriving Show
 
-newtype Interpreter = Interpreter {
-    symbolTable :: M.Map String Lambda
-  }
-data VM = VM {
-    codePointer :: Int
-  , stack :: [Int]
-  }
+type Env = M.Map String Val
 
-runLambda :: String -> (a -> a) -> a -> a
-runLambda = either error id 
-          . undefined
-          . either (error . show) id . parser
+eval :: Lambda -> State Env Val
 
-runLambda' str = runLambda str (+1) 0
+eval (Number x) = return $ Num x
+eval (Identifier i)  = 
+  gets (fromMaybe (error $ "Unknown Variable '" ++ i ++ "'") . M.lookup i)
+
+eval (x :+: y) = (liftM2 oper `on` eval) x y
+  where
+    oper ~(Num x) ~(Num y) = Num $ x + y
+
+eval (Grouping x) = eval x
+eval (Abstraction arg expr) = return $ Func arg expr
+eval (Application f' arg') = do
+  ~(Func i expr) <- eval f'
+  arg <- eval arg'
+  modify (M.insert i arg)
+  eval expr
+
+

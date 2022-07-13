@@ -30,16 +30,6 @@
   (major1) == 0 && (major2) <  6 || \
   (major1) == 0 && (major2) == 6 && (minor) <= 4)
 #endif /* MIN_VERSION_containers */
-/* package lens-5.1.1 */
-#ifndef VERSION_lens
-#define VERSION_lens "5.1.1"
-#endif /* VERSION_lens */
-#ifndef MIN_VERSION_lens
-#define MIN_VERSION_lens(major1,major2,minor) (\
-  (major1) <  5 || \
-  (major1) == 5 && (major2) <  1 || \
-  (major1) == 5 && (major2) == 1 && (minor) <= 1)
-#endif /* MIN_VERSION_lens */
 /* package mtl-2.2.2 */
 #ifndef VERSION_mtl
 #define VERSION_mtl "2.2.2"
@@ -121,6 +111,16 @@
   (major1) == 0 && (major2) <  68 || \
   (major1) == 0 && (major2) == 68 && (minor) <= 7)
 #endif /* MIN_TOOL_VERSION_hsc2hs */
+/* tool pkg-config-0.29.2 */
+#ifndef TOOL_VERSION_pkg_config
+#define TOOL_VERSION_pkg_config "0.29.2"
+#endif /* TOOL_VERSION_pkg_config */
+#ifndef MIN_TOOL_VERSION_pkg_config
+#define MIN_TOOL_VERSION_pkg_config(major1,major2,minor) (\
+  (major1) <  0 || \
+  (major1) == 0 && (major2) <  29 || \
+  (major1) == 0 && (major2) == 29 && (minor) <= 2)
+#endif /* MIN_TOOL_VERSION_pkg_config */
 /* tool runghc-9.0.2 */
 #ifndef TOOL_VERSION_runghc
 #define TOOL_VERSION_runghc "9.0.2"

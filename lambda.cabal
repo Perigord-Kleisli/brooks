@@ -26,14 +26,13 @@ executable lambda
 
     -- Modules included in this executable, other than Main.
     other-modules:    Parser  
-                      VM
                       Compiler
+                      VM
 
     -- LANGUAGE extensions used by modules in this package.
     -- other-extensions:
     build-depends:    base ^>=4.15.1.0
                     , parsec >= 3.1.15
-                    , lens >= 5
                     , containers >= 0.6
                     , mtl >= 2.2
 
