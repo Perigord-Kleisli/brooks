@@ -3,7 +3,6 @@ module VM where
 import qualified Data.Map.Strict as M
 import Control.Monad.State
 
-import Compiler
 import Parser
 import Data.Maybe
 import Data.Function
