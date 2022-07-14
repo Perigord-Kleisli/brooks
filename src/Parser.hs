@@ -1,9 +1,14 @@
-module Parser where 
+{-# LANGUAGE LambdaCase #-}
+module Parser where
+
+import qualified Control.Monad.State as S
+import qualified Data.Map.Lazy as M
+import Text.ParserCombinators.Parsec
 
 import Control.Applicative hiding (many, (<|>))
 import Control.Monad
-import Text.ParserCombinators.Parsec
-import Control.Arrow
+import Data.Function
+import Text.Printf
 
 lexeme :: Parser a -> Parser a
 lexeme = (<* (spaces <|> void newline))
@@ -31,9 +36,9 @@ num = lexeme $ read <$> many1 digit
 
 churchNum :: Parser Lambda
 churchNum = applyN <$> num
-  where 
+  where
     applyN n = Grouping $ Abstraction "f" $ Abstraction "n" (applyN' "f" "n" n)
-    applyN' func var 0 = Grouping (Identifier var)
+    applyN' _    var 0 = Grouping (Identifier var)
     applyN' func var 1 = Grouping (Application (Identifier func) (Identifier var))
     applyN' func var n = Grouping (Application (Identifier func) (applyN' func var (n-1)))
 
@@ -55,14 +60,58 @@ lterm :: Parser Lambda
 lterm = choice [try variable, churchNum, abstraction,grouping]
 
 lambdaP :: Parser Lambda
-lambdaP = chainl1 lterm (Application <$ spaces) 
+lambdaP = chainl1 lterm (Application <$ spaces)
 
 parser :: String -> Either ParseError Lambda
-parser = fmap appendAdd <$> parse lambdaP "Lambda Calculus: "
+parser = fmap appendAdd <$> parse lambdaP "Brooks: "
   where
     appendAdd x = Application
-                    (Application x 
-                      (Abstraction ".topX" 
+                    (Application x
+                      (Abstraction ".topX"
                           (Identifier ".topX" :+: Number 1)))
                     (Number 0)
 
+
+alphaConvert :: Lambda -> Lambda
+alphaConvert = (`S.evalState` mempty) . go
+  where
+    go :: Lambda -> S.State (M.Map String Int) Lambda
+    go (Abstraction arg expr) = do
+      S.modify (M.insertWith(+) arg 1)
+      arg' <- S.gets (mappend arg . (\case; x | x <= 1 -> ""; x -> '.': show x) . M.findWithDefault 0 arg)
+      expr' <- go expr
+      return (Abstraction arg' expr')
+
+    go (Identifier arg) = do
+      arg' <- S.gets (mappend arg . (\case; x | x <= 1 -> ""; x -> '.': show x) . M.findWithDefault 0 arg)
+      return $ Identifier arg'
+
+    go (Application x y) = (liftA2 (flip Application) `on` go) y x
+
+    go (Grouping x) = Grouping <$> go x
+    go x = return x
+
+unappendAdd :: Lambda -> Lambda
+unappendAdd (Application (Application x (Abstraction ".topX" (Identifier ".topX" :+: Number 1))) (Number 0)) = x
+unappendAdd x = x
+
+showLambda :: Lambda -> String
+showLambda (Identifier x     ) = takeWhile (/='.') x
+showLambda (Number     x     ) = show x
+showLambda (x           :+: y) = (printf "(+ %s %s)" `on` showLambda) x y
+showLambda (Application x   y) = (printf "%s %s" `on` showLambda) x y
+showLambda (Abstraction x   y) = (printf "λ%s.%s" `on` showLambda) (Identifier x) y
+showLambda (Grouping x       ) = printf "(%s)" $ showLambda x
+
+showTree :: Lambda -> String
+showTree = go 0
+ where
+  indent x y = mappend "\n" (concat $ replicate x "  ") <> y
+  go :: Int -> Lambda -> String
+  go n (Number x       ) = indent n $ printf "(Number %s)" $ show x
+  go n (x :+: y        ) = indent n $ (printf "(:+: %s %s)" `on` go (n + 1)) x y
+  go n (Identifier x   ) = indent n $ printf "(Identifier %s)" x
+  go n (Grouping   x   ) = indent n $ printf "(Grouping %s)" (go (n + 1) x)
+  go n (Application x y) = indent n $ (printf "(Application %s %s)" `on` go (n + 1)) x y
+  go n (Abstraction x y) =
+    indent n $ (printf "(Abstraction %s %s)" `on` go (n + 1)) (Identifier x) y
