@@ -15,12 +15,10 @@ Usage: brooks [OPTION...] files...
 ## Repl
 ```
 <expr>                          Evaluate an expression
-:                               Repeat last command
 :b              <expr>          Do a beta reduction
 :h                              Print Help
 :q              <expr>          Quit
 :p              <expr>          Print the generated syntax tree
-:r              <file>          Run the provided file
 :!              <cmd>           Run a shell command
 ```
 
@@ -53,4 +51,9 @@ Usage: brooks [OPTION...] files...
 (Abstraction
   (Identifier x)
   (Identifier x))
+```
+
+# Test it out with flakes 
+```sh
+nix run github:Trouble-Truffle/brooks -- --repl
 ```
