@@ -4,11 +4,25 @@ module Parser where
 import qualified Control.Monad.State as S
 import qualified Data.Map.Lazy as M
 import Text.ParserCombinators.Parsec
+    ( Parser,
+      ParseError,
+      char,
+      digit,
+      newline,
+      noneOf,
+      spaces,
+      between,
+      chainl1,
+      choice,
+      many1,
+      (<|>),
+      parse,
+      try )
 
-import Control.Applicative hiding (many, (<|>))
-import Control.Monad
-import Data.Function
-import Text.Printf
+import Control.Applicative ( Applicative(liftA2) )
+import Control.Monad ( void )
+import Data.Function ( on )
+import Text.Printf ( printf )
 
 lexeme :: Parser a -> Parser a
 lexeme = (<* (spaces <|> void newline))
